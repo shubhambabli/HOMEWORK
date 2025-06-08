@@ -1,0 +1,202 @@
+#include <stdio.h>
+#include <string.h>
+
+#define MAX_MEMBERS 5
+#define MAX_NAME 50
+#define MAX_NICKNAME 30
+#define MAX_TESTS 7
+#define DAYS_PER_WEEK 6
+#define MAX_EXERCISE_PER_DAY 2
+#define MAX_EXERCISE_NAME 30
+
+// Member structure
+struct Member {
+    char name[MAX_NAME];
+    char nickname[MAX_NICKNAME];
+};
+
+struct Member milliways_members[MAX_MEMBERS] = {
+    {"Goeun", "goe"},
+    {"Woncheol", "won"},
+    {"Youngjin", "jin"},
+    {"Hyekyung", "hye"},
+    {"Arthur", "art"}
+};
+
+int member_count = 5;
+float health_scores[MAX_MEMBERS][MAX_TESTS];
+char member_routine[MAX_MEMBERS][DAYS_PER_WEEK][MAX_EXERCISE_PER_DAY][MAX_EXERCISE_NAME];
+
+const char *exercise_types[][3] = {
+    {"Running", "Cycling", "Fast Walking"},   // Cardio
+    {"Push-ups", "Squats", ""},               // Full-body
+    {"Leg Press", "Leg Curl", ""},            // Lower-body
+    {"Pull-ups", "Chin-ups", ""},             // Upper-body
+    {"Plank", "Crunches", ""}                 // Core
+};
+
+const char *days[DAYS_PER_WEEK] = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+
+// Utility to show member list
+void displayMemberList() {
+    printf("\n--- Milliways Members ---\n");
+    for (int i = 0; i < member_count; ++i) {
+        printf("%d. %s (%s)\n", i + 1, milliways_members[i].name, milliways_members[i].nickname);
+    }
+}
+
+// Set health data
+void setHealth() {
+    printf("\n--- Enter Fitness Data ---\n");
+    for (int i = 0; i < member_count; ++i) {
+        printf("\nEnter 7 fitness scores for %s (%s), separated by spaces:\n", milliways_members[i].name, milliways_members[i].nickname);
+        for (int j = 0; j < MAX_TESTS; ++j) {
+            scanf("%f", &health_scores[i][j]);
+        }
+    }
+}
+
+// View health data
+void getHealth() {
+    int choice;
+    char nickname[MAX_NICKNAME];
+    printf("\n--- View Fitness Data ---\n");
+    printf("1. All members\n2. Specific member\n3. Specific test of a member\nChoose option: ");
+    scanf("%d", &choice);
+    getchar();
+
+    if (choice == 1) {
+        for (int i = 0; i < member_count; ++i) {
+            printf("%s (%s): ", milliways_members[i].name, milliways_members[i].nickname);
+            for (int j = 0; j < MAX_TESTS; ++j)
+                printf("%.2f ", health_scores[i][j]);
+            printf("\n");
+        }
+    } else if (choice == 2) {
+        printf("Enter nickname: ");
+        scanf("%s", nickname);
+        for (int i = 0; i < member_count; ++i) {
+            if (strcmp(nickname, milliways_members[i].nickname) == 0) {
+                printf("%s (%s): ", milliways_members[i].name, nickname);
+                for (int j = 0; j < MAX_TESTS; ++j)
+                    printf("%.2f ", health_scores[i][j]);
+                printf("\n");
+                return;
+            }
+        }
+        printf("Member not found.\n");
+    } else if (choice == 3) {
+        int testIndex;
+        printf("Enter nickname: ");
+        scanf("%s", nickname);
+        printf("Enter test index (0 to 6): ");
+        scanf("%d", &testIndex);
+        for (int i = 0; i < member_count; ++i) {
+            if (strcmp(nickname, milliways_members[i].nickname) == 0) {
+                printf("%s (%s) Test %d Score: %.2f\n", milliways_members[i].name, nickname, testIndex, health_scores[i][testIndex]);
+                return;
+            }
+        }
+        printf("Member not found.\n");
+    } else {
+        printf("Invalid option.\n");
+    }
+}
+
+// Set workout routine
+void setExerciseRoutine() {
+    printf("\n--- Set Basic Workout Routine ---\n");
+    displayMemberList();
+    int memberIndex;
+    printf("Select member by number: ");
+    scanf("%d", &memberIndex);
+    getchar();
+    memberIndex--;
+
+    if (memberIndex < 0 || memberIndex >= member_count) {
+        printf("Invalid member.\n");
+        return;
+    }
+
+    int coreCount = 0;
+
+    for (int day = 0; day < DAYS_PER_WEEK; ++day) {
+        printf("\n%s (%s) - %s\n", milliways_members[memberIndex].name,
+               milliways_members[memberIndex].nickname, days[day]);
+
+        int typeIndex, exerciseIndex;
+
+        printf("Choose Cardio (0=Running, 1=Cycling, 2=Fast Walking): ");
+        scanf("%d", &exerciseIndex);
+        getchar();
+        strncpy(member_routine[memberIndex][day][0], exercise_types[0][exerciseIndex], MAX_EXERCISE_NAME);
+
+        printf("Choose Strength/Core Type (1=Full-body, 2=Lower-body, 3=Upper-body, 4=Core): ");
+        scanf("%d", &typeIndex);
+        getchar();
+
+        if (typeIndex == 4 && coreCount >= 1) {
+            printf("Only one Core exercise allowed per week. Choose another type.\n");
+            --day;
+            continue;
+        } else if (typeIndex == 4) {
+            coreCount++;
+        }
+
+        printf("Choose Exercise (0 or 1): ");
+        scanf("%d", &exerciseIndex);
+        getchar();
+        strncpy(member_routine[memberIndex][day][1], exercise_types[typeIndex][exerciseIndex], MAX_EXERCISE_NAME);
+    }
+
+    printf("Workout routine set for %s.\n", milliways_members[memberIndex].name);
+}
+
+// View workout routine
+void getExerciseRoutine() {
+    printf("\n--- View Basic Workout Routine ---\n");
+    displayMemberList();
+    int memberIndex;
+    printf("Select member by number: ");
+    scanf("%d", &memberIndex);
+    getchar();
+    memberIndex--;
+
+    if (memberIndex < 0 || memberIndex >= member_count) {
+        printf("Invalid member.\n");
+        return;
+    }
+
+    printf("\nWorkout Routine for %s (%s):\n", milliways_members[memberIndex].name, milliways_members[memberIndex].nickname);
+    for (int day = 0; day < DAYS_PER_WEEK; ++day) {
+        printf("%s: %s, %s\n", days[day],
+               member_routine[memberIndex][day][0],
+               member_routine[memberIndex][day][1]);
+    }
+}
+
+// Main menu
+int main() {
+    int option;
+
+    while (1) {
+        printf("\n--- Milliways Training System ---\n");
+        printf("1. Enter Fitness Data\n");
+        printf("2. View Fitness Data\n");
+        printf("3. Set Basic Workout Routine\n");
+        printf("4. View Basic Workout Routine\n");
+        printf("5. Exit\n");
+        printf("Select option: ");
+        scanf("%d", &option);
+        getchar();
+
+        switch (option) {
+            case 1: setHealth(); break;
+            case 2: getHealth(); break;
+            case 3: setExerciseRoutine(); break;
+            case 4: getExerciseRoutine(); break;
+            case 5: return 0;
+            default: printf("Invalid option.\n");
+        }
+    }
+}
