@@ -1,142 +1,156 @@
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
 
-#define MAX_TRAINING_STAGES 8
-#define MAX_MAIN_MENU_ITEMS 3
+#define MAX_MEMBERS 10
+#define MAX_DAYS 7
 
-// Menu titles stored as 1D arrays (simulate 2D via arrays of strings)
-const char *mainMenu[MAX_MAIN_MENU_ITEMS] = {
-    "I. Audition Management",
-    "II. Training",
-    "III. Debut"
+// Member names (from Problem 6 of Assignment 1 or placeholders)
+char *members[MAX_MEMBERS] = {
+    "Alice", "Bob", "Charlie", "Diana", "Eve",
+    "Frank", "Grace", "Heidi", "Ivan", "Judy"
 };
 
-const char *trainingMenu[MAX_TRAINING_STAGES] = {
-    "1. Physical Strength & Knowledge",
-    "2. Self-Management & Teamwork",
-    "3. Language & Pronunciation",
-    "4. Vocal",
-    "5. Dance",
-    "6. Visual & Image",
-    "7. Acting & Stage Performance",
-    "8. Fan Communication"
+// Days of the week
+const char *days[MAX_DAYS] = {
+    "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
 };
 
-// Evaluation results: ' ' = not attempted, 'P' = passed, 'F' = failed
-char stageResults[MAX_TRAINING_STAGES] = {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '};
+// Structures
+typedef struct {
+    float height;  // in cm
+    float weight;  // in kg
+    int age;
+} PhysicalCondition;
+
+typedef struct {
+    char routine[MAX_DAYS][100];  // Workout per day
+} WorkoutPlan;
+
+typedef struct {
+    char meals[MAX_DAYS][100];    // Meal per day
+} DietPlan;
+
+// Global arrays
+PhysicalCondition physical_conditions[MAX_MEMBERS];
+WorkoutPlan workout_plans[MAX_MEMBERS];
+DietPlan diet_plans[MAX_MEMBERS];
 
 // Function declarations
-void showMainMenu();
-void handleTrainingMenu();
-void evaluateStage(int stageIndex);
+void show_menu();
+void enter_physical_condition(int index);
+void view_physical_condition(int index);
+void set_workout_routine(int index);
+void view_workout_routine(int index);
+void set_diet_plan(int index);
+void view_diet_plan(int index);
 
 int main() {
-    char input[10];
+    int choice, member;
 
     while (1) {
-        showMainMenu();
-        printf("Select menu (1-3 or Q to quit): ");
-        fgets(input, sizeof(input), stdin);
+        show_menu();
+        scanf("%d", &choice);
 
-        // Exit conditions
-        if (input[0] == '0' || input[0] == '\n' ||
-            input[0] == 'q' || input[0] == 'Q') {
+        if (choice == 0) {
             printf("Exiting program.\n");
             break;
         }
 
-        switch (input[0]) {
-            case '1':
-                printf("Entering Audition Management...\n");
+        printf("Select member index (0 to %d): ", MAX_MEMBERS - 1);
+        scanf("%d", &member);
+        if (member < 0 || member >= MAX_MEMBERS) {
+            printf("Invalid member index. Try again.\n");
+            continue;
+        }
+
+        switch (choice) {
+            case 1:
+                enter_physical_condition(member);
                 break;
-            case '2':
-                handleTrainingMenu();
+            case 2:
+                view_physical_condition(member);
                 break;
-            case '3':
-                printf("Entering Debut...\n");
+            case 3:
+                set_workout_routine(member);
+                break;
+            case 4:
+                view_workout_routine(member);
+                break;
+            case 5:
+                set_diet_plan(member);
+                break;
+            case 6:
+                view_diet_plan(member);
                 break;
             default:
-                printf("Invalid input. Try again.\n");
+                printf("Invalid menu choice. Try again.\n");
         }
     }
 
     return 0;
 }
 
-// Show Main Menu
-void showMainMenu() {
-    printf("\n=== Main Menu ===\n");
-    for (int i = 0; i < MAX_MAIN_MENU_ITEMS; i++) {
-        printf("%s\n", mainMenu[i]);
+// Menu display
+void show_menu() {
+    printf("\n=== Millieway’s Health Manager ===\n");
+    printf("1. Enter Physical Condition\n");
+    printf("2. View Physical Condition\n");
+    printf("3. Set Workout Routine\n");
+    printf("4. View Workout Routine\n");
+    printf("5. Set Diet Plan\n");
+    printf("6. View Diet Plan\n");
+    printf("0. Exit\n");
+    printf("Choose an option: ");
+}
+
+// Physical Condition Functions
+void enter_physical_condition(int index) {
+    printf("Enter height (cm): ");
+    scanf("%f", &physical_conditions[index].height);
+    printf("Enter weight (kg): ");
+    scanf("%f", &physical_conditions[index].weight);
+    printf("Enter age: ");
+    scanf("%d", &physical_conditions[index].age);
+    printf("Physical condition updated for %s.\n", members[index]);
+}
+
+void view_physical_condition(int index) {
+    printf("\n--- %s's Physical Condition ---\n", members[index]);
+    printf("Height: %.1f cm\n", physical_conditions[index].height);
+    printf("Weight: %.1f kg\n", physical_conditions[index].weight);
+    printf("Age   : %d\n", physical_conditions[index].age);
+}
+
+// Workout Plan Functions
+void set_workout_routine(int index) {
+    printf("\n--- Set Workout Routine for %s ---\n", members[index]);
+    for (int i = 0; i < MAX_DAYS; i++) {
+        printf("Enter workout for %s: ", days[i]);
+        scanf(" %[^\n]", workout_plans[index].routine[i]);
+    }
+    printf("Workout routine saved for %s.\n", members[index]);
+}
+
+void view_workout_routine(int index) {
+    printf("\n--- %s's Workout Routine ---\n", members[index]);
+    for (int i = 0; i < MAX_DAYS; i++) {
+        printf("%s: %s\n", days[i], workout_plans[index].routine[i]);
     }
 }
 
-// Handle Training Menu
-void handleTrainingMenu() {
-    char input[10];
-
-    while (1) {
-        printf("\n=== Training Menu ===\n");
-        for (int i = 0; i < MAX_TRAINING_STAGES; i++) {
-            printf("%s [%c]\n", trainingMenu[i], stageResults[i]);
-        }
-
-        printf("Select training stage (1-8), B to go back, or Q to quit: ");
-        fgets(input, sizeof(input), stdin);
-
-        if (input[0] == 'q' || input[0] == 'Q') {
-            printf("Exiting program.\n");
-            exit(0);
-        } else if (input[0] == 'b' || input[0] == 'B') {
-            return;
-        }
-
-        int stage = input[0] - '0';
-        if (stage < 1 || stage > 8) {
-            printf("Invalid stage. Try again.\n");
-            continue;
-        }
-
-        int index = stage - 1;
-
-        // Check if stage already completed
-        if (stageResults[index] == 'P') {
-            printf("This stage has already been passed. Cannot retake.\n");
-            continue;
-        }
-
-        // Enforce stage order rules
-        if (index > 0 && stageResults[index - 1] != 'P' && index < 2) {
-            printf("You must pass stage %d first.\n", index);
-            continue;
-        } else if (index >= 2 && (stageResults[0] != 'P' || stageResults[1] != 'P')) {
-            printf("Stages 1 and 2 must be passed before accessing stages 3 to 8.\n");
-            continue;
-        }
-
-        evaluateStage(index);
+// Diet Plan Functions
+void set_diet_plan(int index) {
+    printf("\n--- Set Diet Plan for %s ---\n", members[index]);
+    for (int i = 0; i < MAX_DAYS; i++) {
+        printf("Enter meal for %s: ", days[i]);
+        scanf(" %[^\n]", diet_plans[index].meals[i]);
     }
+    printf("Diet plan saved for %s.\n", members[index]);
 }
 
-// Evaluate a stage
-void evaluateStage(int stageIndex) {
-    char input[10];
-    printf("Would you like to enter the evaluation result? (Y/N): ");
-    fgets(input, sizeof(input), stdin);
-    if (input[0] == 'Y' || input[0] == 'y') {
-        printf("Did you complete the training and pass the certification? (P/F): ");
-        fgets(input, sizeof(input), stdin);
-        if (input[0] == 'P' || input[0] == 'p') {
-            stageResults[stageIndex] = 'P';
-            printf("Stage %d marked as passed.\n", stageIndex + 1);
-        } else if (input[0] == 'F' || input[0] == 'f') {
-            stageResults[stageIndex] = 'F';
-            printf("Stage %d marked as failed.\n", stageIndex + 1);
-        } else {
-            printf("Invalid input. Returning to training menu.\n");
-        }
-    } else {
-        printf("Returning to training menu.\n");
+void view_diet_plan(int index) {
+    printf("\n--- %s's Diet Plan ---\n", members[index]);
+    for (int i = 0; i < MAX_DAYS; i++) {
+        printf("%s: %s\n", days[i], diet_plans[index].meals[i]);
     }
 }
