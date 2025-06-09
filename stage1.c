@@ -2,97 +2,156 @@
 #include <string.h>
 
 #define MAX_MEMBERS 10
-#define MAX_DAYS 7
-
-// Member names (from Problem 6 of Assignment 1 or placeholders)
-char *members[MAX_MEMBERS] = {
-    "Alice", "Bob", "Charlie", "Diana", "Eve",
-    "Frank", "Grace", "Heidi", "Ivan", "Judy"
-};
+#define DAYS_IN_WEEK 7
+#define NAME_LENGTH 30
+#define FOOD_ITEM_LENGTH 50
 
 // Days of the week
-const char *days[MAX_DAYS] = {
-    "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
-};
+const char *days[] = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
 
 // Structures
 typedef struct {
-    float height;  // in cm
-    float weight;  // in kg
-    int age;
+    char name[NAME_LENGTH];
+    float height;
+    float weight;
 } PhysicalCondition;
 
 typedef struct {
-    char routine[MAX_DAYS][100];  // Workout per day
-} WorkoutPlan;
+    char workout[DAYS_IN_WEEK][100];
+} WorkoutRoutine;
 
 typedef struct {
-    char meals[MAX_DAYS][100];    // Meal per day
+    char diet[DAYS_IN_WEEK][FOOD_ITEM_LENGTH];
+    int calories[DAYS_IN_WEEK];
+    int isVegan;  // 1 for vegan, 0 for not
 } DietPlan;
 
-// Global arrays
-PhysicalCondition physical_conditions[MAX_MEMBERS];
-WorkoutPlan workout_plans[MAX_MEMBERS];
-DietPlan diet_plans[MAX_MEMBERS];
+// Data Arrays
+PhysicalCondition physicalConditions[MAX_MEMBERS];
+WorkoutRoutine workoutRoutines[MAX_MEMBERS];
+DietPlan dietPlans[MAX_MEMBERS];
+int memberCount = 0;
 
-// Function declarations
-void show_menu();
-void enter_physical_condition(int index);
-void view_physical_condition(int index);
-void set_workout_routine(int index);
-void view_workout_routine(int index);
-void set_diet_plan(int index);
-void view_diet_plan(int index);
-
-int main() {
-    int choice, member;
-
-    while (1) {
-        show_menu();
-        scanf("%d", &choice);
-
-        if (choice == 0) {
-            printf("Exiting program.\n");
-            break;
-        }
-
-        printf("Select member index (0 to %d): ", MAX_MEMBERS - 1);
-        scanf("%d", &member);
-        if (member < 0 || member >= MAX_MEMBERS) {
-            printf("Invalid member index. Try again.\n");
-            continue;
-        }
-
-        switch (choice) {
-            case 1:
-                enter_physical_condition(member);
-                break;
-            case 2:
-                view_physical_condition(member);
-                break;
-            case 3:
-                set_workout_routine(member);
-                break;
-            case 4:
-                view_workout_routine(member);
-                break;
-            case 5:
-                set_diet_plan(member);
-                break;
-            case 6:
-                view_diet_plan(member);
-                break;
-            default:
-                printf("Invalid menu choice. Try again.\n");
+// Helper Functions
+int findMemberIndex(const char *name) {
+    for (int i = 0; i < memberCount; i++) {
+        if (strcmp(physicalConditions[i].name, name) == 0) {
+            return i;
         }
     }
-
-    return 0;
+    return -1;
 }
 
-// Menu display
-void show_menu() {
-    printf("\n=== Millieway’s Health Manager ===\n");
+// Menu Functions
+void enterPhysicalCondition() {
+    if (memberCount >= MAX_MEMBERS) {
+        printf("Member list is full.\n");
+        return;
+    }
+
+    printf("Enter member name: ");
+    scanf("%s", physicalConditions[memberCount].name);
+    printf("Enter height (cm): ");
+    scanf("%f", &physicalConditions[memberCount].height);
+    printf("Enter weight (kg): ");
+    scanf("%f", &physicalConditions[memberCount].weight);
+    memberCount++;
+    printf("Physical condition saved.\n");
+}
+
+void viewPhysicalCondition() {
+    char name[NAME_LENGTH];
+    printf("Enter member name to view: ");
+    scanf("%s", name);
+
+    int index = findMemberIndex(name);
+    if (index == -1) {
+        printf("Member not found.\n");
+        return;
+    }
+
+    printf("Name: %s\n", physicalConditions[index].name);
+    printf("Height: %.2f cm\n", physicalConditions[index].height);
+    printf("Weight: %.2f kg\n", physicalConditions[index].weight);
+}
+
+void setWorkoutRoutine() {
+    char name[NAME_LENGTH];
+    printf("Enter member name to set workout: ");
+    scanf("%s", name);
+
+    int index = findMemberIndex(name);
+    if (index == -1) {
+        printf("Member not found.\n");
+        return;
+    }
+
+    for (int i = 0; i < DAYS_IN_WEEK; i++) {
+        printf("Enter workout for %s: ", days[i]);
+        scanf(" %[^\n]", workoutRoutines[index].workout[i]);
+    }
+    printf("Workout routine set.\n");
+}
+
+void viewWorkoutRoutine() {
+    char name[NAME_LENGTH];
+    printf("Enter member name to view workout: ");
+    scanf("%s", name);
+
+    int index = findMemberIndex(name);
+    if (index == -1) {
+        printf("Member not found.\n");
+        return;
+    }
+
+    for (int i = 0; i < DAYS_IN_WEEK; i++) {
+        printf("%s: %s\n", days[i], workoutRoutines[index].workout[i]);
+    }
+}
+
+void setDietPlan() {
+    char name[NAME_LENGTH];
+    printf("Enter member name to set diet: ");
+    scanf("%s", name);
+
+    int index = findMemberIndex(name);
+    if (index == -1) {
+        printf("Member not found.\n");
+        return;
+    }
+
+    printf("Is the member vegan? (1: Yes, 0: No): ");
+    scanf("%d", &dietPlans[index].isVegan);
+
+    for (int i = 0; i < DAYS_IN_WEEK; i++) {
+        printf("Enter food for %s: ", days[i]);
+        scanf(" %[^\n]", dietPlans[index].diet[i]);
+        printf("Enter calories for %s: ", days[i]);
+        scanf("%d", &dietPlans[index].calories[i]);
+    }
+    printf("Diet plan set.\n");
+}
+
+void viewDietPlan() {
+    char name[NAME_LENGTH];
+    printf("Enter member name to view diet: ");
+    scanf("%s", name);
+
+    int index = findMemberIndex(name);
+    if (index == -1) {
+        printf("Member not found.\n");
+        return;
+    }
+
+    printf("Diet Plan for %s (%s)\n", name, dietPlans[index].isVegan ? "Vegan" : "Not Vegan");
+    for (int i = 0; i < DAYS_IN_WEEK; i++) {
+        printf("%s: %s (%d cal)\n", days[i], dietPlans[index].diet[i], dietPlans[index].calories[i]);
+    }
+}
+
+// Main Menu
+void displayMenu() {
+    printf("\n=== Millieway’s Health Management System ===\n");
     printf("1. Enter Physical Condition\n");
     printf("2. View Physical Condition\n");
     printf("3. Set Workout Routine\n");
@@ -100,57 +159,25 @@ void show_menu() {
     printf("5. Set Diet Plan\n");
     printf("6. View Diet Plan\n");
     printf("0. Exit\n");
-    printf("Choose an option: ");
+    printf("Select an option: ");
 }
 
-// Physical Condition Functions
-void enter_physical_condition(int index) {
-    printf("Enter height (cm): ");
-    scanf("%f", &physical_conditions[index].height);
-    printf("Enter weight (kg): ");
-    scanf("%f", &physical_conditions[index].weight);
-    printf("Enter age: ");
-    scanf("%d", &physical_conditions[index].age);
-    printf("Physical condition updated for %s.\n", members[index]);
-}
+int main() {
+    int choice;
+    do {
+        displayMenu();
+        scanf("%d", &choice);
+        switch (choice) {
+            case 1: enterPhysicalCondition(); break;
+            case 2: viewPhysicalCondition(); break;
+            case 3: setWorkoutRoutine(); break;
+            case 4: viewWorkoutRoutine(); break;
+            case 5: setDietPlan(); break;
+            case 6: viewDietPlan(); break;
+            case 0: printf("Exiting...\n"); break;
+            default: printf("Invalid option.\n");
+        }
+    } while (choice != 0);
 
-void view_physical_condition(int index) {
-    printf("\n--- %s's Physical Condition ---\n", members[index]);
-    printf("Height: %.1f cm\n", physical_conditions[index].height);
-    printf("Weight: %.1f kg\n", physical_conditions[index].weight);
-    printf("Age   : %d\n", physical_conditions[index].age);
-}
-
-// Workout Plan Functions
-void set_workout_routine(int index) {
-    printf("\n--- Set Workout Routine for %s ---\n", members[index]);
-    for (int i = 0; i < MAX_DAYS; i++) {
-        printf("Enter workout for %s: ", days[i]);
-        scanf(" %[^\n]", workout_plans[index].routine[i]);
-    }
-    printf("Workout routine saved for %s.\n", members[index]);
-}
-
-void view_workout_routine(int index) {
-    printf("\n--- %s's Workout Routine ---\n", members[index]);
-    for (int i = 0; i < MAX_DAYS; i++) {
-        printf("%s: %s\n", days[i], workout_plans[index].routine[i]);
-    }
-}
-
-// Diet Plan Functions
-void set_diet_plan(int index) {
-    printf("\n--- Set Diet Plan for %s ---\n", members[index]);
-    for (int i = 0; i < MAX_DAYS; i++) {
-        printf("Enter meal for %s: ", days[i]);
-        scanf(" %[^\n]", diet_plans[index].meals[i]);
-    }
-    printf("Diet plan saved for %s.\n", members[index]);
-}
-
-void view_diet_plan(int index) {
-    printf("\n--- %s's Diet Plan ---\n", members[index]);
-    for (int i = 0; i < MAX_DAYS; i++) {
-        printf("%s: %s\n", days[i], diet_plans[index].meals[i]);
-    }
+    return 0;
 }
