@@ -27,6 +27,11 @@ typedef struct {
     char response[MAX_RESPONSE_LEN + 1];
 } CounselingResponse;
 
+typedef struct {
+    char keyword[10];
+    char message[512];
+} ArthurEasterEgg;
+
 // Global Arrays
 Trauma traumaList[MAX_MEMBERS] = {
     {"Luna", 19, ""},
@@ -47,6 +52,11 @@ const Question questionList[MAX_QUESTIONS] = {
 CounselingResponse counselingData[MAX_COUNSELING];
 int counselingCount = 0;
 
+ArthurEasterEgg arthur = {
+    "specter",
+    "I confess. After graduating from university, I was blinded by the arrogance of starting a startup and recklessly blocked my friends' paths. I painfully learned that when I am the only one convinced by my idea, it leads to disastrous results. The past Arthur was a ghost of dogmatism and stubbornness."
+};
+
 // Function Prototypes
 void traumaMenu();
 void inputTrauma();
@@ -54,6 +64,10 @@ void counselingMenu();
 void overcomeTrauma();
 int findMemberIndex(const char* nickname);
 void displayCounselingSummary();
+void find_easter_egg();
+int isRightChar(const char*, const char*);
+int isEasterEgg(const char*);
+void toBinary(char, char*);
 
 // Helper Function: Find index of a nickname in trauma list
 int findMemberIndex(const char* nickname) {
@@ -67,21 +81,28 @@ int findMemberIndex(const char* nickname) {
 
 void traumaMenu() {
     int choice;
+    char input[30];
     while (1) {
         printf("\n-- Trauma Management Menu --\n");
         printf("1. Input Trauma\n");
         printf("2. Start Counseling Session\n");
         printf("3. View Counseling Summary\n");
         printf("0. Exit\n");
-        printf("Select an option: ");
-        scanf("%d", &choice); getchar();
+        printf("Select an option or enter 'Arthur': ");
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = 0;
 
-        switch (choice) {
-            case 1: inputTrauma(); break;
-            case 2: counselingMenu(); break;
-            case 3: displayCounselingSummary(); break;
-            case 0: return;
-            default: printf("Invalid option. Try again.\n");
+        if (strcmp(input, "Arthur") == 0) {
+            find_easter_egg();
+        } else {
+            choice = atoi(input);
+            switch (choice) {
+                case 1: inputTrauma(); break;
+                case 2: counselingMenu(); break;
+                case 3: displayCounselingSummary(); break;
+                case 0: return;
+                default: printf("Invalid option. Try again.\n");
+            }
         }
     }
 }
@@ -182,12 +203,66 @@ void displayCounselingSummary() {
     }
 }
 
+void toBinary(char ch, char* bin) {
+    for (int i = 7; i >= 0; i--) {
+        bin[7 - i] = (ch & (1 << i)) ? '1' : '0';
+    }
+    bin[8] = '\0';
+}
+
+int isRightChar(const char* binary, const char* input) {
+    for (int i = 0; i < 7; i++) {
+        char bin[9];
+        toBinary(arthur.keyword[6 - i], bin);
+        if (input[i] != arthur.keyword[6 - i]) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int isEasterEgg(const char* word) {
+    return strcmp(word, arthur.keyword) == 0;
+}
+
+void find_easter_egg() {
+    char inputChars[10];
+    char word[10];
+
+    printf("\n<<Arthur's Easter Egg>>\n");
+    printf("Reversed Binary of keyword: \n");
+    for (int i = 6; i >= 0; i--) {
+        char bin[9];
+        toBinary(arthur.keyword[i], bin);
+        printf("%s ", bin);
+    }
+    printf("\n\nEnter each character (7 total): ");
+    fgets(inputChars, sizeof(inputChars), stdin);
+    inputChars[strcspn(inputChars, "\n")] = 0;
+
+    if (!isRightChar(NULL, inputChars)) {
+        printf("Incorrect characters. Try again.\n");
+        return;
+    }
+
+    printf("\nNow enter the combined word: ");
+    fgets(word, sizeof(word), stdin);
+    word[strcspn(word, "\n")] = 0;
+
+    if (isEasterEgg(word)) {
+        printf("\n##Easter Egg Discovered!$$\n");
+        printf("%s\n", arthur.message);
+    } else {
+        printf("Incorrect word. Returning to menu.\n");
+    }
+}
+
 void overcomeTrauma() {
     traumaMenu();
 }
 
-// Main Entry Point for Testing
 int main() {
     overcomeTrauma();
     return 0;
 }
+
