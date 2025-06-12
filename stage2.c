@@ -1,160 +1,193 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
 #include <time.h>
 
-#define MAX_TRAINEES 8
-#define MAX_NAME_LEN 30
-#define MAX_MENTORS 8
+#define MAX_MEMBERS 10
+#define MAX_TRAUMA_LEN 256
+#define MAX_RESPONSE_LEN 100
+#define MAX_QUESTIONS 5
+#define MAX_COUNSELING 30
 
-// Structs
+// Struct Definitions
 typedef struct {
-    char nickname[MAX_NAME_LEN];
-    int nicknameValue;
-    int ability;
-} Trainee;
+    char nickname[30];
+    int age;
+    char trauma[MAX_TRAUMA_LEN];
+} Trauma;
 
 typedef struct {
-    int id;  // 1~8
-    char name[MAX_NAME_LEN];
-    int menteeIndex; // Index of trainee
-} Mentor;
+    int id;
+    char content[150];
+} Question;
+
+typedef struct {
+    char nickname[30];
+    char question[150];
+    char response[MAX_RESPONSE_LEN + 1];
+} CounselingResponse;
 
 // Global Arrays
-Trainee trainees[MAX_TRAINEES];
-Mentor mentors[MAX_MENTORS];
-int traineeCount = 0;
-int mentorCount = 0;
+Trauma traumaList[MAX_MEMBERS] = {
+    {"Luna", 19, ""},
+    {"Kai", 20, ""},
+    {"Mina", 18, ""},
+    {"Jin", 21, ""},
+    {"Sora", 22, ""}
+};
+
+const Question questionList[MAX_QUESTIONS] = {
+    {1, "In what situations have you experienced this trauma?"},
+    {2, "How has this situation affected your daily life and emotions?"},
+    {3, "How have you tried to overcome this trauma?"},
+    {4, "What emotions do you associate with this trauma?"},
+    {5, "What kind of support do you think is necessary to overcome this trauma?"}
+};
+
+CounselingResponse counselingData[MAX_COUNSELING];
+int counselingCount = 0;
 
 // Function Prototypes
-int parseIntMember(const char *nickname);
-int getRandomAbility();
-void initTrainees();
-void inputMentors();
-void matchMentoring();
-void printMentoring();
+void traumaMenu();
+void inputTrauma();
+void counselingMenu();
+void overcomeTrauma();
+int findMemberIndex(const char* nickname);
+void displayCounselingSummary();
 
-// Function Definitions
-int parseIntMember(const char *nickname) {
-    int sum = 0;
-    for (int i = 0; nickname[i] != '\0'; i++) {
-        sum += (int)nickname[i];
+// Helper Function: Find index of a nickname in trauma list
+int findMemberIndex(const char* nickname) {
+    for (int i = 0; i < MAX_MEMBERS; ++i) {
+        if (strcmp(traumaList[i].nickname, nickname) == 0) {
+            return i;
+        }
     }
-    return sum;
+    return -1;
 }
 
-int getRandomAbility() {
-    return rand() % 901 + 100; // Range: 100–1000
-}
+void traumaMenu() {
+    int choice;
+    while (1) {
+        printf("\n-- Trauma Management Menu --\n");
+        printf("1. Input Trauma\n");
+        printf("2. Start Counseling Session\n");
+        printf("3. View Counseling Summary\n");
+        printf("0. Exit\n");
+        printf("Select an option: ");
+        scanf("%d", &choice); getchar();
 
-void initTrainees() {
-    const char *names[MAX_TRAINEES] = {
-        "Leo", "Mina", "Juno", "Yuna",
-        "Kai", "Haru", "Nari", "Sora"
-    };
-
-    for (int i = 0; i < MAX_TRAINEES; i++) {
-        strncpy(trainees[i].nickname, names[i], MAX_NAME_LEN);
-        trainees[i].nicknameValue = parseIntMember(names[i]);
-        trainees[i].ability = getRandomAbility();
-    }
-
-    traineeCount = MAX_TRAINEES;
-    printf("Trainees initialized.\n");
-}
-
-void inputMentors() {
-    char input[MAX_NAME_LEN];
-    printf("Enter up to %d mentor names:\n", MAX_MENTORS);
-
-    for (int i = 0; i < MAX_MENTORS; i++) {
-        printf("Mentor %d name: ", i + 1);
-        scanf("%s", input);
-
-        mentors[i].id = i + 1;
-        strncpy(mentors[i].name, input, MAX_NAME_LEN);
-        mentors[i].menteeIndex = -1;
-        mentorCount++;
+        switch (choice) {
+            case 1: inputTrauma(); break;
+            case 2: counselingMenu(); break;
+            case 3: displayCounselingSummary(); break;
+            case 0: return;
+            default: printf("Invalid option. Try again.\n");
+        }
     }
 }
 
-void matchMentoring() {
-    if (mentorCount < MAX_MENTORS || traineeCount < MAX_TRAINEES) {
-        printf("Ensure both mentors and trainees are fully registered (8 each).\n");
+void inputTrauma() {
+    char nickname[30];
+    char trauma[MAX_TRAUMA_LEN];
+
+    while (1) {
+        printf("\nEnter nickname (or type 'exit' to return): ");
+        fgets(nickname, sizeof(nickname), stdin);
+        nickname[strcspn(nickname, "\n")] = 0;
+
+        if (strcmp(nickname, "exit") == 0) break;
+
+        int index = findMemberIndex(nickname);
+        (index != -1) ? (
+            printf("Enter trauma description: "),
+            fgets(trauma, sizeof(trauma), stdin),
+            trauma[strcspn(trauma, "\n")] = 0,
+            strcpy(traumaList[index].trauma, trauma),
+            printf("Trauma saved for %s.\n", nickname))
+        : printf("Nickname not found. Try again.\n");
+    }
+}
+
+void counselingMenu() {
+    char nickname[30];
+    int index;
+    int asked[3] = {-1, -1, -1};
+    srand((unsigned int)time(NULL));
+
+    printf("\nAvailable members with trauma entries:\n");
+    for (int i = 0; i < MAX_MEMBERS; ++i) {
+        if (strlen(traumaList[i].trauma) > 0) {
+            printf("- %s\n", traumaList[i].nickname);
+        }
+    }
+
+    printf("Enter nickname to start session: ");
+    fgets(nickname, sizeof(nickname), stdin);
+    nickname[strcspn(nickname, "\n")] = 0;
+
+    index = findMemberIndex(nickname);
+    if (index == -1 || strlen(traumaList[index].trauma) == 0) {
+        printf("Invalid or no trauma entry for nickname.\n");
         return;
     }
 
-    int usedMentees[MAX_TRAINEES] = {0};
+    for (int i = 0; i < 3; ++i) {
+        int q;
+        do {
+            q = rand() % MAX_QUESTIONS;
+        } while (q == asked[0] || q == asked[1]);
+        asked[i] = q;
 
-    for (int i = 0; i < MAX_MENTORS; i++) {
-        int found = 0;
-        for (int j = 0; j < MAX_TRAINEES; j++) {
-            if (!usedMentees[j] && (j % MAX_MENTORS == mentors[i].id % MAX_MENTORS)) {
-                mentors[i].menteeIndex = j;
-                usedMentees[j] = 1;
-                found = 1;
+        char response[MAX_RESPONSE_LEN + 2];
+        printf("\nQ%d: %s\n", questionList[q].id, questionList[q].content);
+        while (1) {
+            printf("Your response (max 100 characters): ");
+            fgets(response, sizeof(response), stdin);
+            response[strcspn(response, "\n")] = 0;
+
+            if (strlen(response) == 0 || strlen(response) > MAX_RESPONSE_LEN) {
+                printf("Invalid input. Please enter again.\n");
+            } else {
+                CounselingResponse cr;
+                strcpy(cr.nickname, nickname);
+                strcpy(cr.question, questionList[q].content);
+                strcpy(cr.response, response);
+                counselingData[counselingCount++] = cr;
                 break;
             }
         }
+    }
+    printf("Counseling session for %s completed.\n", nickname);
+}
 
-        // If no mentee with same remainder, assign first available
-        if (!found) {
-            for (int j = 0; j < MAX_TRAINEES; j++) {
-                if (!usedMentees[j]) {
-                    mentors[i].menteeIndex = j;
-                    usedMentees[j] = 1;
-                    break;
-                }
-            }
-        }
+void displayCounselingSummary() {
+    char nickname[30];
+    printf("\nEnter nickname to view counseling summary: ");
+    fgets(nickname, sizeof(nickname), stdin);
+    nickname[strcspn(nickname, "\n")] = 0;
+
+    int index = findMemberIndex(nickname);
+    if (index == -1) {
+        printf("Nickname not found.\n");
+        return;
     }
 
-    printf("Mentoring matched (1:1).\n");
-}
+    printf("\n--- Counseling Summary for %s ---\n", nickname);
+    printf("Trauma: %s\n", traumaList[index].trauma);
 
-void printMentoring() {
-    printf("\n=== Mentoring Results ===\n");
-    for (int i = 0; i < MAX_MENTORS; i++) {
-        int menteeIdx = mentors[i].menteeIndex;
-        if (menteeIdx >= 0 && menteeIdx < MAX_TRAINEES) {
-            printf("Trainee #%d (%s) matched with Mentor #%d (%s)\n",
-                   menteeIdx + 1, trainees[menteeIdx].nickname,
-                   mentors[i].id, mentors[i].name);
-        } else {
-            printf("Mentor #%d (%s) has no mentee assigned.\n", mentors[i].id, mentors[i].name);
+    for (int i = 0; i < counselingCount; ++i) {
+        if (strcmp(counselingData[i].nickname, nickname) == 0) {
+            printf("\nQ: %s\nA: %s\n", counselingData[i].question, counselingData[i].response);
         }
     }
-    printf("=========================\n");
 }
 
-// Menu
-void displayMenu() {
-    printf("\n=== Mentoring System Menu ===\n");
-    printf("1. Initialize Trainee List\n");
-    printf("2. Input Mentor List\n");
-    printf("3. Match Mentoring\n");
-    printf("4. Show Mentoring Results\n");
-    printf("0. Exit\n");
-    printf("Select an option: ");
+void overcomeTrauma() {
+    traumaMenu();
 }
 
+// Main Entry Point for Testing
 int main() {
-    srand((unsigned int)time(NULL));
-
-    int choice;
-    do {
-        displayMenu();
-        scanf("%d", &choice);
-
-        switch (choice) {
-            case 1: initTrainees(); break;
-            case 2: inputMentors(); break;
-            case 3: matchMentoring(); break;
-            case 4: printMentoring(); break;
-            case 0: printf("Exiting...\n"); break;
-            default: printf("Invalid option.\n");
-        }
-    } while (choice != 0);
-
+    overcomeTrauma();
     return 0;
 }
